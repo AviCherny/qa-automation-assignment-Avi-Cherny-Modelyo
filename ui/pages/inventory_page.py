@@ -31,6 +31,11 @@ class InventoryPage(BasePage):
     def sort_by(self, option: str) -> None:
         self.sort_dropdown.select_option(option)
 
+    @allure.step("Remove item '{item_name}' from cart")
+    def remove_from_cart(self, item_name: str) -> None:
+        item = self.page.locator("[data-test='inventory-item']").filter(has_text=item_name)
+        item.locator("[data-test^='remove']").click()
+
     def get_item_prices(self) -> list[float]:
         prices = self.page.locator("[data-test='inventory-item-price']").all_inner_texts()
         return [float(p.replace("$", "")) for p in prices]
