@@ -76,7 +76,7 @@ Track every deliverable from the assignment. Work top to bottom.
 - [x] `pytest -n 4` runs without test interference — verified locally (11/11 passed)
 - [x] Playwright HTML report generated on every run (`playwright-report/index.html`)
 - [x] Failed tests capture: screenshot + Playwright trace (configured in `conftest.py`)
-- [ ] Confirm artifacts are downloadable from GitHub Actions run
+- [x] Confirm artifacts are downloadable from GitHub Actions run
 
 ---
 
@@ -96,16 +96,16 @@ Track every deliverable from the assignment. Work top to bottom.
 - [x] `.github/workflows/tests.yml` — triggers on push and PR to main
 - [x] Pipeline: install deps → `playwright install` → run UI + API tests → upload HTML report + failure artifacts
 - [x] UI and API test jobs run in parallel in the pipeline
-- [ ] Pipeline is green on main before submission
+- [x] Pipeline is green on main before submission
 - [ ] (Optional) `Dockerfile` that produces the same green run
 
 ---
 
 ## Final Submission Checks
 
-- [ ] Repo is public
+- [x] Repo is public
 - [x] `README.md` — prerequisites, setup, run locally, run in parallel, view reports, link to CI run
 - [x] `DESIGN.md` at repo root
-- [ ] Latest CI run on main is green
-- [ ] Update README CI badge link to point to actual passing run
+- [x] Latest CI run on main is green
+- [x] Update README CI badge link to point to actual passing run
 - [ ] Send repo URL by replying to the email
