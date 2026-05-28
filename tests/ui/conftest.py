@@ -28,7 +28,10 @@ def logged_in_inventory(page):
 @pytest.fixture(scope="session")
 def browser():
     with sync_playwright() as p:
-        b = p.chromium.launch(headless=not PLAYWRIGHT_HEADED)
+        b = p.chromium.launch(
+            headless=not PLAYWRIGHT_HEADED,
+            args=["--no-sandbox", "--disable-dev-shm-usage"],
+        )
         logging.info("[browser] Chromium launched")
         yield b
 
