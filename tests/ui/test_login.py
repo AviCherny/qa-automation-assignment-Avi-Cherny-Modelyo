@@ -1,3 +1,4 @@
+import re
 import pytest
 import allure
 from playwright.sync_api import expect
@@ -18,7 +19,7 @@ def test_login_standard_user_lands_on_inventory(page):
 
     inventory = login.login(STANDARD_USER, PASSWORD)
 
-    expect(page).to_have_url("**/inventory.html")
+    expect(page).to_have_url(re.compile(r"inventory\.html"))
     expect(inventory.inventory_list).to_be_visible()
     assert inventory.inventory_items.count() > 0
 
