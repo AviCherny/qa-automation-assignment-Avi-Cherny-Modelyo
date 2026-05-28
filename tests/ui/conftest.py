@@ -4,7 +4,7 @@ import pytest
 import allure
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from config import PLAYWRIGHT_HEADLESS, PLAYWRIGHT_TIMEOUT, PLAYWRIGHT_VIDEO_DIR, PLAYWRIGHT_TRACE_DIR
+from config import PLAYWRIGHT_HEADED, PLAYWRIGHT_TIMEOUT, PLAYWRIGHT_VIDEO_DIR, PLAYWRIGHT_TRACE_DIR
 from ui.pages.login_page import LoginPage
 
 STANDARD_USER = "standard_user"
@@ -28,7 +28,7 @@ def logged_in_inventory(page):
 @pytest.fixture(scope="session")
 def browser():
     with sync_playwright() as p:
-        b = p.chromium.launch(headless=PLAYWRIGHT_HEADLESS)
+        b = p.chromium.launch(headless=not PLAYWRIGHT_HEADED)
         logging.info("[browser] Chromium launched")
         yield b
 
