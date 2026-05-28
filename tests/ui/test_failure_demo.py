@@ -18,20 +18,12 @@ def test_backpack_price_is_discounted(logged_in_inventory):
 
     The assertion is wrong by design — the backpack costs $29.99, not $1.00.
     """
-    with allure.step("Verify inventory list is visible"):
-        expect(logged_in_inventory.inventory_list).to_be_visible()
+    expect(logged_in_inventory.inventory_list).to_be_visible()
 
-    with allure.step(f"Get price of '{BACKPACK_NAME}'"):
-        prices = logged_in_inventory.get_item_prices()
-        actual_price = prices[0]
-        allure.attach(
-            f"All prices on page: {prices}",
-            name="prices_snapshot",
-            attachment_type=allure.attachment_type.TEXT,
-        )
+    prices = logged_in_inventory.get_item_prices()
+    actual_price = prices[0]
 
-    with allure.step(f"Assert '{BACKPACK_NAME}' costs ${EXPECTED_PRICE:.2f}"):
-        assert actual_price == EXPECTED_PRICE, (
-            f"Expected '{BACKPACK_NAME}' to cost ${EXPECTED_PRICE:.2f} "
-            f"but got ${actual_price:.2f}"
-        )
+    assert actual_price == EXPECTED_PRICE, (
+        f"Expected '{BACKPACK_NAME}' to cost ${EXPECTED_PRICE:.2f} "
+        f"but got ${actual_price:.2f}"
+    )
