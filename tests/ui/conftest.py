@@ -5,6 +5,10 @@ import allure
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from config import PLAYWRIGHT_HEADLESS, PLAYWRIGHT_TIMEOUT, PLAYWRIGHT_VIDEO_DIR, PLAYWRIGHT_TRACE_DIR
+from ui.pages.login_page import LoginPage
+
+STANDARD_USER = "standard_user"
+PASSWORD = "secret_sauce"
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
@@ -12,6 +16,13 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
     setattr(item, "rep_" + rep.when, rep)
+
+
+@pytest.fixture
+def logged_in_inventory(page):
+    login = LoginPage(page)
+    login.open()
+    return login.login(STANDARD_USER, PASSWORD)
 
 
 @pytest.fixture(scope="session")
