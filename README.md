@@ -75,27 +75,34 @@ All config is read from environment variables. Defaults work out of the box.
 
 ## View Reports
 
-After a test run, open the HTML report:
+After a test run, open the Allure report:
 
 ```bash
-playwright show-report
+allure serve allure-results
 ```
 
-Or open `playwright-report/index.html` directly in your browser.
+### What you get on a failing test
 
-Failure artifacts (screenshot + Playwright trace) are saved automatically to `test-results/`.
-Open a trace with:
+Every failed UI test automatically attaches:
+- **Screenshot** — browser state at the moment of failure
+- **Video** — full recording of the test run
+- **Playwright trace** — step-by-step DOM snapshots + network, viewable at [trace.playwright.dev](https://trace.playwright.dev)
+- **Console errors** — any browser-side JS errors captured during the run
+
+![Allure failure report showing screenshot, video, and trace attachments](docs/allure-failure-artifacts.jpg)
+
+Trace files are saved to `traces/` and can also be opened directly:
 
 ```bash
-playwright show-trace test-results/<test-name>/trace.zip
+playwright show-trace traces/<test-name>.zip
 ```
 
 ---
 
 ## CI Artifacts
 
-Every GitHub Actions run uploads the full HTML report and failure artifacts.
-Download from: **Actions tab -> latest run -> Artifacts -> `playwright-report`**
+Every GitHub Actions run uploads the full Allure results as an artifact.
+Download from: **Actions tab → latest run → Artifacts → `allure-results`**
 
 ---
 
