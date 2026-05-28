@@ -3,6 +3,12 @@ import logging
 import pytest
 import requests
 import allure
+from config import WORKERS
+
+
+def pytest_configure(config):
+    if WORKERS > 1:
+        config.option.numprocesses = WORKERS
 
 
 def _log_response(response: requests.Response, *args, **kwargs):
