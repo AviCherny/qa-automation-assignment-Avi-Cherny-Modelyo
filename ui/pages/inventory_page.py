@@ -12,11 +12,12 @@ class InventoryPage(BasePage):
         self.cart_link = page.locator("[data-test='shopping-cart-link']")
         self.sort_dropdown = page.locator("[data-test='product-sort-container']")
         self.item_prices = page.locator("[data-test='inventory-item-price']")
+        self._add_to_cart_btn = "[data-test^='add-to-cart']"
+        self._remove_btn = "[data-test^='remove']"
 
     @allure.step("Add item '{item_name}' to cart")
     def add_to_cart(self, item_name: str) -> None:
-        item = self.page.locator(f"[data-test='inventory-item']").filter(has_text=item_name)
-        item.locator("[data-test^='add-to-cart']").click()
+        self.inventory_items.filter(has_text=item_name).locator(self._add_to_cart_btn).click()
 
     @allure.step("Get cart badge count")
     def get_cart_badge_count(self) -> int:
@@ -34,8 +35,7 @@ class InventoryPage(BasePage):
 
     @allure.step("Remove item '{item_name}' from cart")
     def remove_from_cart(self, item_name: str) -> None:
-        item = self.page.locator("[data-test='inventory-item']").filter(has_text=item_name)
-        item.locator("[data-test^='remove']").click()
+        self.inventory_items.filter(has_text=item_name).locator(self._remove_btn).click()
 
     def get_item_prices(self) -> list[float]:
         prices = self.item_prices.all_inner_texts()
