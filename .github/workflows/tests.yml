@@ -46,7 +46,7 @@ jobs:
         run: playwright install chromium --with-deps
 
       - name: Run UI tests
-        run: pytest -m ui --alluredir=allure-results
+        run: pytest -m ui -n 2 --alluredir=allure-results
 
       - name: Upload allure-results (UI)
         if: always()
