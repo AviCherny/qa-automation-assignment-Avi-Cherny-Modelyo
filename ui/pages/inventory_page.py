@@ -11,6 +11,7 @@ class InventoryPage(BasePage):
         self.cart_badge = page.locator("[data-test='shopping-cart-badge']")
         self.cart_link = page.locator("[data-test='shopping-cart-link']")
         self.sort_dropdown = page.locator("[data-test='product-sort-container']")
+        self.item_prices = page.locator("[data-test='inventory-item-price']")
 
     @allure.step("Add item '{item_name}' to cart")
     def add_to_cart(self, item_name: str) -> None:
@@ -37,5 +38,5 @@ class InventoryPage(BasePage):
         item.locator("[data-test^='remove']").click()
 
     def get_item_prices(self) -> list[float]:
-        prices = self.page.locator("[data-test='inventory-item-price']").all_inner_texts()
+        prices = self.item_prices.all_inner_texts()
         return [float(p.replace("$", "")) for p in prices]
