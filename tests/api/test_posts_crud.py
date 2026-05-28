@@ -1,5 +1,6 @@
 import pytest
 import allure
+from api.builders.body_builder import BodyBuilder
 from api.clients.posts_client import create_post, update_post, delete_post
 
 
@@ -7,7 +8,7 @@ from api.clients.posts_client import create_post, update_post, delete_post
 @allure.feature("Posts")
 @allure.story("POST /posts")
 def test_create_post_returns_201_with_generated_id(session):
-    payload = {"title": "foo", "body": "bar", "userId": 1}
+    payload = BodyBuilder().set("title", "foo").set("body", "bar").set("userId", 1).build()
 
     response = create_post(session, payload)
     data = response.json()
@@ -23,15 +24,15 @@ def test_create_post_returns_201_with_generated_id(session):
 @allure.feature("Posts")
 @allure.story("PUT /posts/{id}")
 def test_update_post_returns_200_with_updated_body(session):
-    payload = {"id": 1, "title": "updated title", "body": "updated body", "userId": 1}
+    payload = BodyBuilder().set("id", 1).set("title", "updated title").set("body", "updated body").set("userId", 1).build()
 
-    response = update_post(session, 1, payload)
+    response = update_post(session, 2, payload)
     data = response.json()
 
     assert response.status_code == 200
     assert data["title"] == payload["title"]
     assert data["body"] == payload["body"]
-    assert data["id"] == 1
+    assert data["id"] == 2
 
 
 @pytest.mark.api
