@@ -51,11 +51,17 @@ HEADED=true pytest tests/ui/
 
 ## Run in Parallel
 
+**UI tests — 2 workers (minimum required):**
+```bash
+pytest tests/ui/ -n 2
+```
+
+**All tests — 4 workers:**
 ```bash
 pytest -n 4
 ```
 
-UI tests use isolated browser contexts per test — safe to parallelize with no shared state.
+UI tests use isolated browser contexts per test (function-scoped `page` fixture, one browser per worker) — safe to parallelize with no shared state.
 
 ---
 
