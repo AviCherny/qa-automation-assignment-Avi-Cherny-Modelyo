@@ -9,6 +9,7 @@ BACKPACK_NAME = "Sauce Labs Backpack"
 EXPECTED_PRICE = 1.00   # Wrong on purpose — actual price is $29.99
 
 
+@pytest.mark.xfail(reason="Intentional failure to demo Allure failure artifacts", strict=True)
 @pytest.mark.ui
 @allure.feature("Inventory")
 @allure.story("Product pricing")
