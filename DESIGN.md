@@ -65,6 +65,22 @@ that the hard way in a previous job. That's the kind of thing you carry with you
 After that, contract tests. E2E tests are too slow to be the first line of
 defense against a broken API response shape.
 
+When UI and API tests share the same domain, setup should be shared too. The
+conftest is already split — shared HTTP session fixtures live in
+`tests/conftest.py`, UI-specific fixtures in `tests/ui/conftest.py`. The next
+step is the cookie injection pattern: create the session via API, inject the
+cookie into the browser context, skip the login flow entirely. It's faster,
+less flaky, and keeps auth out of the test itself.
+
+Tests that pass locally and fail in CI are a debugging tax. A container
+eliminates that variable — same Python, same browser binaries, same result
+everywhere.
+
+Most test suites prove the happy path works. At a Zero Trust company, the more
+important tests are the ones that should never pass — expired tokens, wrong roles,
+requests with no auth at all. If one of them does pass, that's not a flaky test.
+That's a product failure.
+
 ## AI Tools Used
 
 I designed the structure first — simple, easy to extend, easy to maintain.
