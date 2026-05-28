@@ -2,55 +2,81 @@
 
 ## Language and Framework Choice
 
-**Python + Playwright + pytest.**
+I went with **Python + Playwright + pytest**.
 
-Python was chosen for readability and speed — the test intent reads like plain English, which matters in a team where developers also review tests. pytest's fixture model handles setup/teardown with zero boilerplate.
+Python because test code gets read by more people than just QA engineers — developers review tests too, and Python reads close enough to plain English that the intent is clear without needing to understand framework internals first.
 
-Playwright over Selenium because Playwright ships with auto-waits built into every action and assertion. There is no `WebDriverWait(driver, 10).until(...)` noise; the framework waits for the element to be actionable before clicking. This eliminates an entire class of race-condition flakiness by default. Selenium remains the right choice when you need to test on IE11, a legacy corporate environment, or an in-house Selenium Grid that is already funded and maintained — otherwise Playwright wins on reliability and developer experience.
+I chose Playwright over Selenium because I didn't want to manage explicit waits. With Selenium you end up writing `WebDriverWait(driver, 10).until(EC.element_to_be_clickable(...))` everywhere, and eventually someone gets lazy and drops a `time.sleep(2)` instead, and now you have a flaky suite. Playwright waits for elements to be actionable before every action, which removes that whole category of failure by default.
+
+Selenium is still the right call if the company already has a mature Selenium Grid or needs to support legacy browsers. But for a new project with no existing investment, Playwright wins on reliability and developer experience.
 
 ## Anti-Flakiness Strategy
 
-Concrete techniques used:
+The principle I followed: tests should wait for real conditions, not for time.
 
-- **No `time.sleep`** anywhere in the codebase. Every pause is condition-based.
-- **Playwright auto-waits** handle element readiness before every `click`, `fill`, and `select_option`.
-- **`expect()` assertions** (Playwright's built-in retry-assertion) poll until the condition is true or the timeout is reached, rather than asserting a snapshot at a single instant.
-- **`data-test` attributes only** for locators. Swag Labs exposes them on every interactive element. These are stable across CSS refactors and layout changes.
-- **Isolated browser context per test** — each test gets a fresh context and page, so no authentication state or localStorage bleeds between tests.
+- No `time.sleep` anywhere. Every wait is condition-based.
+- Playwright auto-waits for actions — `click`, `fill`, `select_option` all wait for the element to be actionable before doing anything.
+- Assertions use Playwright's `expect()`, which retries until the condition is true or the timeout is reached. This means a test won't fail just because the DOM updated half a second after the action.
+- Locators use `data-test` attributes exclusively. Swag Labs exposes them on every interactive element, and they survive CSS refactors and layout changes. Class-based selectors break the moment someone touches the styling.
+- Each UI test gets a fresh browser context. No cookies, localStorage, or session state carried over from a previous test.
 
-At scale (1000+ tests): introduce test sharding across multiple CI runners, a flakiness detection pipeline (auto-retry on failure + flag tests that fail intermittently), and a dedicated test stability dashboard. Replace Allure with a persistent test-results database to track flakiness rates over time.
+If this suite had to scale to 1000+ tests, the next investment would be around visibility into flakiness, not just prevention. That means automatic retry on failure, flagging tests that fail intermittently, and a way to track flakiness rates over time. At that scale the problem shifts from "how do we stop flakiness" to "how do we know which failures are real bugs vs. unstable tests."
 
 ## Parallelism and Isolation
 
-Tests are isolated because:
+Each UI test opens its own `browser.new_context()`, which gives full isolation — separate cookies, storage, and session — without the overhead of launching a new browser process per test. The browser process is shared; the context is not.
 
-- Each UI test opens its own `browser.new_context()` — no shared cookies, local storage, or session state.
-- API tests use a shared `requests.Session` (session-scoped) but hit a read-only sandbox; each test is stateless by definition.
-- No shared mutable fixtures between tests.
+API tests use a shared `requests.Session` scoped to the session, but since the tests are read-only and stateless, there is no shared mutation between them.
 
-Run with: `pytest -n 4`
+The suite runs in parallel with:
 
-What breaks first when you turn parallelism up: if you share a single `browser` instance across workers without context isolation, you get race conditions on navigation. The current setup shares the browser process (cheap) but isolates the context (safe). The next bottleneck at very high parallelism is outbound network — JSONPlaceholder will rate-limit you.
+```bash
+pytest -n 4
+```
+
+The failure mode to watch for with higher parallelism is shared state: reused users, shared files, tests that depend on execution order. In this project the UI tests are isolated by context, so the more likely bottleneck under heavy load is the target environment itself — JSONPlaceholder will rate-limit before the test code breaks.
 
 ## Reporting and Triage
 
-When a test fails in CI at 3am, the on-call engineer sees an Allure report (linked in the GitHub Actions summary) with:
+A failing test is only useful if someone can understand what went wrong without having to reproduce it locally.
 
-1. The exact failed assertion and stack trace
-2. A screenshot taken at the moment of failure
-3. A Playwright trace file (open at trace.playwright.dev) — step-by-step browser recording with network, console, and DOM snapshots
-4. Browser console errors captured inline
+Each failed test produces:
+- The assertion that failed and the stack trace
+- A screenshot from the moment of failure
+- A Playwright trace file — a step-by-step recording of browser actions with DOM snapshots, network requests, and console output, viewable at trace.playwright.dev
+- Console errors from the browser session
 
-Path to root cause: open the trace, scrub to the failed step, inspect the DOM snapshot and network tab. No need to reproduce locally for most failures.
+The triage flow is: open the report, find the failed test, open the trace, go to the failed step, look at the DOM and network state at that point. In most cases that's enough to know whether it's a product bug, an environment issue, or the test itself.
 
 ## What I Would Do Next
 
-**Parameterized cross-browser runs (chromium + firefox + webkit) in CI.**
+Not all tests should run on every push. The right split: smoke on PR (fast
+gate), full regression nightly, cross-browser weekly.
 
-Swag Labs is a controlled environment so cross-browser failures are unlikely here, but in a real product this is the highest-value addition: it surfaces layout and JS compatibility bugs that only appear in non-Chromium engines. The CI matrix is trivial to add; the payoff in caught bugs is high.
+At 500 tests, flakiness destroys team trust. Retry helps, but the real fix is
+tracking pass rate per test over time and isolating the unstable ones — so one
+bad test doesn't drag down the whole run.
 
-After that: a contract test layer between the UI and API using Pact, so frontend assumptions about response shapes are verified automatically without running E2E tests.
+The current setup uses a hardcoded user. The right solution is every test
+responsible for its own data — creates its own user, cleans up after itself.
+Nobody wants to build it, but everyone feels it when it's missing. We learned
+that the hard way in a previous job. That's the kind of thing you carry with you.
+
+After that, contract tests. E2E tests are too slow to be the first line of
+defense against a broken API response shape.
 
 ## AI Tools Used
 
-Claude (claude-sonnet-4-6) was used for: scaffolding the project structure, generating the fixture boilerplate (conftest.py), and drafting this document. All test logic, selector choices, and architectural decisions were reviewed and validated manually.
+I designed the structure first — simple, easy to extend, easy to maintain.
+Once the skeleton was in place, Claude implemented inside it. The structure
+was the constraint. That's how I stayed in control of what came out.
+
+Claude was my main tool. When I wasn't sure about something it produced,
+I cross-checked with GPT — using one AI to check another.
+
+The architectural decisions were mine: page object structure, isolation
+strategy, selector approach, reporting. I made each one for a reason and can
+explain the tradeoff.
+
+If something breaks, I open the trace, find the failed step, and I know what
+happened. I built it that way on purpose.
