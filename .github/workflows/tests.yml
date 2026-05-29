@@ -20,7 +20,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run API tests
-        run: pytest -m api --alluredir=allure-results
+        run: pytest -m api -n 2 --alluredir=allure-results
 
       - name: Upload allure-results (API)
         if: always()
